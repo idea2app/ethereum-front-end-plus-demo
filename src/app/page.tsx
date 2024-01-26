@@ -7,6 +7,8 @@ import { LoginLogout } from '../components/LoginLogout';
 import metaMaskStore from '../models/MetaMask';
 
 export default function Home() {
+  const { localStorage } = globalThis;
+
   const [userAddress, setUserAddress] = useState<string>();
 
   const handleRequestAccounts = useCallback(async () => {
@@ -15,17 +17,32 @@ export default function Home() {
       params: [],
     })
 
-    setUserAddress(accounts?.[0])
+    const localStorageAccount = localStorage.account;
+
+    setUserAddress(
+      localStorage.account =
+      (!accounts?.length || !localStorageAccount)
+        ? ""
+        : accounts.includes(localStorageAccount)
+          ? localStorageAccount
+          : accounts[0]
+    )
   }, [])
 
   useEffect(() => { handleRequestAccounts() }, [])
 
-  const onLogin = async () => setUserAddress(await metaMaskStore.connectWallet())
+  const onLogin = async () =>
+    setUserAddress(localStorage.account = await metaMaskStore.connectWallet())
+
+  const onLogout = async () => {
+    localStorage.clear();
+    location.reload();
+  }
 
   return (
     <Container>
       <h1 className='text-center mt-5 mb-3'>MBTI</h1>
-      <LoginLogout address={userAddress} onLogin={onLogin} />
+      <LoginLogout  {...{ address: userAddress, onLogin, onLogout }} />
     </Container>
   )
 }
