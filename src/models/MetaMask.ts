@@ -1,8 +1,19 @@
+import { BrowserProvider, Contract, ethers, JsonRpcSigner } from "ethers";
+
 import { defaultChainInfo } from "./chainInfo";
+
+interface ContractAddressAndAbi {
+  address: string;
+  abi: ethers.Interface | ethers.InterfaceAbi;
+}
 
 const { localStorage } = globalThis;
 
 class MetaMask {
+  browserProvider?: BrowserProvider;
+
+  signer?: JsonRpcSigner;
+
   constructor() {
     globalThis.window?.ethereum?.on('accountsChanged', accounts => {
       localStorage.account = (accounts as string[])?.[0] ?? "";
@@ -41,6 +52,38 @@ class MetaMask {
   switchDefaultChainAndReload = async () => {
     await this.switchDefaultChain();
     location.reload()
+  }
+
+  getBrowserProvider() {
+    if (!globalThis.window?.ethereum)
+      throw new Error('MetaMask is nodt installed!');
+
+    if (!this.browserProvider)
+      this.browserProvider = new ethers.BrowserProvider(globalThis.window.ethereum);
+
+    return this.browserProvider;
+  }
+
+  async getSigner() {
+    if (this.browserProvider && localStorage?.account && this.signer) return this.signer;
+
+    if (!localStorage.account) await this.connectWallet();
+
+    if (!this.browserProvider) this.getBrowserProvider();
+
+    return (this.signer = await this.browserProvider!.getSigner());
+  }
+
+  async getDaiContract({ address, abi }: ContractAddressAndAbi) {
+    await this.switchDefaultChain();
+
+    return new Contract(address, abi, this.getBrowserProvider());
+  }
+
+  async getDaiContractWithSigner({ address, abi }: ContractAddressAndAbi) {
+    await this.switchDefaultChain();
+
+    return new Contract(address, abi, await this.getSigner());
   }
 }
 
