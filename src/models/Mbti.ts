@@ -1,11 +1,33 @@
+import { parseEther } from "ethers";
+
 import { abiAndAddress } from "./AbiAndAddress";
-import metaMaskstore from './MetaMask';
+import metaMaskStore from './MetaMask';
+
+const { mbti: mbtiContractInfo } = abiAndAddress;
 
 class Mbti {
   async claimMbti(value: number) {
-    const mbtiContract = await metaMaskstore.getDaiContractWithSigner(abiAndAddress.mbti);
+    const mbtiContract = await metaMaskStore.getDaiContractWithSigner(mbtiContractInfo);
 
-    mbtiContract.claimMBTI(value);
+    return mbtiContract.claimMBTI(value);
+  }
+
+  async getMyMBTI() {
+    const mbtiContract = await metaMaskStore.getDaiContractWithSigner(mbtiContractInfo);
+
+    return mbtiContract.getMyMBTI();
+  }
+
+  async updateMBTI(mbti: number) {
+    const mbtiContract = await metaMaskStore.getDaiContractWithSigner(mbtiContractInfo);
+
+    return mbtiContract.updateMBTI(mbti,{value: parseEther("0.001")});
+  }
+
+  async destroyMBTI() {
+    const mbtiContract = await metaMaskStore.getDaiContractWithSigner(mbtiContractInfo);
+
+    return mbtiContract.destroyMBTI({value: parseEther("0.001")});
   }
 }
 

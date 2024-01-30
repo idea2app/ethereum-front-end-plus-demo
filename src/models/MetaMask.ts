@@ -56,7 +56,7 @@ class MetaMask {
 
   getBrowserProvider() {
     if (!globalThis.window?.ethereum)
-      throw new Error('MetaMask is nodt installed!');
+      throw new Error('MetaMask is not installed!');
 
     if (!this.browserProvider)
       this.browserProvider = new ethers.BrowserProvider(globalThis.window.ethereum);
