@@ -1,4 +1,4 @@
-import { parseEther } from "ethers";
+import { EventLog, parseEther } from "ethers";
 
 import { abiAndAddress } from "./AbiAndAddress";
 import metaMaskStore from './MetaMask';
@@ -6,7 +6,7 @@ import metaMaskStore from './MetaMask';
 const { mbti: mbtiContractInfo } = abiAndAddress;
 
 class Mbti {
-  async claimMbti(value: number) {
+  async claimMBTI(value: number) {
     const mbtiContract = await metaMaskStore.getDaiContractWithSigner(mbtiContractInfo);
 
     return mbtiContract.claimMBTI(value);
@@ -28,6 +28,15 @@ class Mbti {
     const mbtiContract = await metaMaskStore.getDaiContractWithSigner(mbtiContractInfo);
 
     return mbtiContract.destroyMBTI({value: parseEther("0.001")});
+  }
+
+  async getRecord(address: string) {
+    const mbtiContract = await metaMaskStore.getDaiContract(mbtiContractInfo);
+
+    const filter = await mbtiContract.filters.MBTIUpdated(address);
+    const eventLogs = await mbtiContract.queryFilter(filter) as EventLog[];
+
+    return eventLogs.map(({args})=>Number((args[1] as BigInt).toString()));
   }
 }
 
