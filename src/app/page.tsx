@@ -1,11 +1,13 @@
 "use client"
 
+import { getAddress } from 'ethers';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, Card, Col, Container, Row } from 'react-bootstrap';
 
 import { ClaimHistory } from '../components/ClaimHistory';
 import { LoginLogout } from '../components/LoginLogout';
 import { MbtiSelect } from '../components/MbtiSelect';
+import { SearchMbti } from '../components/SearchMbti';
 import mbtiStore from '../models/Mbti';
 import metaMaskStore from '../models/MetaMask';
 import { convertMbtiToString } from '../utils/mbti';
@@ -28,6 +30,10 @@ export default function Home() {
   const [myMbti, setMyMbti] = useState<number>(-1)
 
   const [myHistory, setMyHistory] = useState<string[]>([]);
+
+  const [searchAddress, setSearchAddress] = useState<string>("");
+  const [searchMbti, setSearchMbti] = useState<string>("");
+  const [viewTime, setViewTime] = useState<number>(0);
 
   const handlePageInitRequest = useCallback(async () => {
     const accounts = await window.ethereum?.request<string[]>({
@@ -53,7 +59,15 @@ export default function Home() {
         throw error;
     }
 
-    setMyHistory((localStorageAccount ? await mbtiStore.getRecord(localStorageAccount): []).map(item => item > 0 ? convertMbtiToString(item) : ''));
+    try {
+      const res = await fetch(`/api/mbti/${localStorageAccount}`);
+      const { count } = await res.json();
+      setViewTime(count);
+    } catch (error: any) {
+      console.error(error);
+    }
+
+    setMyHistory((localStorageAccount ? await mbtiStore.getRecord(localStorageAccount) : []).map(item => item > 0 ? convertMbtiToString(item) : ''));
   }, [])
 
   useEffect(() => { handlePageInitRequest() }, [])
@@ -89,6 +103,21 @@ export default function Home() {
     setMyHistory(myHistory => [...myHistory, ""])
   }
 
+  const handleSearchMbti = async (address: string) => {
+    const signature = await metaMaskStore.signer?.signMessage(getAddress(address))
+
+    if (!signature || !userAddress) return;
+
+    const res = await fetch(`/api/mbti/${address}`, {
+      method: 'POST',
+      body: JSON.stringify({ signature, myAddress: userAddress })
+    })
+
+    const { address: searchAddress, value } = await res.json();
+    setSearchAddress(searchAddress);
+    setSearchMbti(convertMbtiToString(value));
+  }
+
   return (
     <Container>
       <h1 className='text-center mt-5 mb-3'>MBTI</h1>
@@ -113,7 +142,11 @@ export default function Home() {
           </Card>
         </>}
 
+        <p>您被围观了 {viewTime} 次 MBTI</p>
+
         {myHistory.length > 0 && <ClaimHistory record={['INTJ', 'ENTJ', ''] || myHistory} />}
+
+        <SearchMbti userAddress={searchAddress} mbti={searchMbti} onSearch={handleSearchMbti} />
       </>}
     </Container>
   )

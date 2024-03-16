@@ -6,6 +6,10 @@ export const defaultChainInfo = {
     symbol: 'SepoliaETH',
     decimals: 18,
   },
-  rpcUrls: ['https://sepolia.infura.io/v3/'],
+  rpcUrls: [
+    'https://1rpc.io/sepolia',
+    'https://rpc2.sepolia.org/',
+    'https://sepolia.infura.io/v3/'
+  ],
   blockExplorerUrls: ['https://sepolia.etherscan.io'],
 }
