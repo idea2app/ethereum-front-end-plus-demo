@@ -43,8 +43,8 @@ export async function POST(
   } catch (error: any) {
     console.error(error);
 
-    const { shortMessage } = error;
-    if (shortMessage) return ErrorResponse(error);
+    const { message } = error as Error;
+    if (message) return ErrorResponse(message);
 
     return ErrorResponse('Not found', 404);
   }
@@ -66,8 +66,8 @@ export function GET(
   } catch (error: any) {
     console.error(error);
 
-    const { shortMessage } = error;
-    if (shortMessage) return ErrorResponse(error);
+    const { message } = error as Error;
+    if (message) return ErrorResponse(message);
 
     return ErrorResponse('Not found', 404);
   }
